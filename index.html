@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8f5">
+  <title>小红书标题生成器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: #292321;
+      background: #fff8f5;
+      font-synthesis: none;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 48px 20px;
+      background: radial-gradient(ellipse at 85% 5%, #ffe5dc 0, transparent 32%), #fff8f5;
+    }
+    main { width: min(100%, 680px); margin: 0 auto; }
+    .eyebrow { margin: 0 0 10px; color: #d45745; font-size: 13px; font-weight: 700; letter-spacing: .08em; }
+    h1 { margin: 0; font-size: clamp(28px, 6vw, 38px); line-height: 1.2; letter-spacing: -.04em; }
+    .intro { margin: 12px 0 28px; color: #756b67; line-height: 1.7; }
+    .card { padding: clamp(20px, 5vw, 32px); border: 1px solid #f0e5df; border-radius: 22px; background: rgba(255,255,255,.88); box-shadow: 0 18px 55px rgba(119, 68, 48, .08); }
+    .field { margin-bottom: 22px; }
+    label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 9px; font-size: 15px; font-weight: 700; }
+    .hint { color: #968984; font-size: 12px; font-weight: 400; }
+    input, textarea, select {
+      display: block; width: 100%; border: 1px solid #e9ded9; border-radius: 12px; background: #fffdfc;
+      color: #292321; font: inherit; font-size: 15px; outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    input, select { height: 48px; padding: 0 14px; }
+    textarea { min-height: 120px; padding: 13px 14px; line-height: 1.6; resize: vertical; }
+    input:focus, textarea:focus, select:focus { border-color: #e57966; box-shadow: 0 0 0 3px rgba(229,121,102,.14); }
+    .primary {
+      display: flex; width: 100%; min-height: 50px; align-items: center; justify-content: center; gap: 9px;
+      border: 0; border-radius: 13px; background: #d94f42; color: white; font: inherit; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: background .15s, transform .15s;
+    }
+    .primary:hover { background: #c94337; }
+    .primary:active { transform: scale(.99); }
+    .primary:disabled { cursor: wait; opacity: .75; }
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.45); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status { min-height: 22px; margin: 12px 0 0; color: #817570; text-align: center; font-size: 13px; }
+    .result { margin-top: 22px; padding: 20px; border: 1px solid; border-radius: 15px; }
+    .result[hidden] { display: none; }
+    .result.safe { border-color: #b9e2c7; background: #f0faf3; }
+    .result.review { border-color: #f0cb9d; background: #fff7eb; }
+    .result.error { border-color: #f0c5be; background: #fff2ef; color: #933e32; }
+    .result-heading { margin: 0 0 12px; font-size: 15px; font-weight: 800; }
+    .result-title { margin: 0; font-size: 19px; font-weight: 700; line-height: 1.55; overflow-wrap: anywhere; }
+    .verdict-label { margin: 18px 0 6px; color: #775c3b; font-size: 13px; font-weight: 700; }
+    .verdict { margin: 0; color: #5d5147; line-height: 1.7; overflow-wrap: anywhere; }
+    .copy {
+      margin-top: 16px; padding: 9px 14px; border: 1px solid #9bc8a9; border-radius: 9px;
+      background: white; color: #287142; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .copy:hover { background: #e8f6ec; }
+    @media (max-width: 520px) {
+      body { padding: 28px 14px; }
+      .intro { margin-bottom: 22px; }
+      .card { border-radius: 18px; }
+      .field { margin-bottom: 19px; }
+      .result { padding: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">RED NOTE · 标题灵感</p>
+    <h1>小红书标题生成器</h1>
+    <p class="intro">说清商品和卖点，生成更贴合营销阶段的小红书标题。</p>
+
+    <section class="card" aria-label="标题生成表单">
+      <form id="generator-form">
+        <div class="field">
+          <label for="product-name">商品名 <span class="hint">最多 30 字</span></label>
+          <input id="product-name" name="product_name" type="text" maxlength="30" placeholder="例如：轻盈保湿面霜" required>
+        </div>
+        <div class="field">
+          <label for="selling-point">核心卖点 <span class="hint">最多 100 字</span></label>
+          <textarea id="selling-point" name="selling_point" maxlength="100" placeholder="写下产品最值得分享的特点" required></textarea>
+        </div>
+        <div class="field">
+          <label for="stage">营销段</label>
+          <select id="stage" name="stage" required>
+            <option value="认知">认知</option>
+            <option value="兴趣">兴趣</option>
+            <option value="购买">购买</option>
+            <option value="忠诚">忠诚</option>
+          </select>
+        </div>
+        <button class="primary" id="submit-button" type="submit">生成标题</button>
+        <p class="status" id="status" aria-live="polite"></p>
+      </form>
+
+      <section id="result" class="result" aria-live="polite" hidden>
+        <h2 id="result-heading" class="result-heading"></h2>
+        <p id="draft-label" class="verdict-label" hidden>草稿标题</p>
+        <p id="result-title" class="result-title"></p>
+        <button id="copy-button" class="copy" type="button" hidden>复制标题</button>
+        <p id="verdict-label" class="verdict-label" hidden>判断结果</p>
+        <p id="verdict" class="verdict" hidden></p>
+      </section>
+    </section>
+  </main>
+  <script>
+    const form = document.querySelector('#generator-form');
+    const button = document.querySelector('#submit-button');
+    const status = document.querySelector('#status');
+    const result = document.querySelector('#result');
+    const heading = document.querySelector('#result-heading');
+    const draftLabel = document.querySelector('#draft-label');
+    const resultTitle = document.querySelector('#result-title');
+    const copyButton = document.querySelector('#copy-button');
+    const verdictLabel = document.querySelector('#verdict-label');
+    const verdict = document.querySelector('#verdict');
+    let titleToCopy = '';
+
+    function clearResult() {
+      result.hidden = true;
+      result.className = 'result';
+      heading.textContent = '';
+      resultTitle.textContent = '';
+      draftLabel.hidden = true;
+      verdict.textContent = '';
+      copyButton.hidden = true;
+      verdictLabel.hidden = true;
+      verdict.hidden = true;
+      titleToCopy = '';
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearResult();
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner" aria-hidden="true"></span>生成中';
+      status.textContent = '生成中，请稍候…';
+
+      const payload = {
+        product_name: form.elements.product_name.value,
+        selling_point: form.elements.selling_point.value,
+        stage: form.elements.stage.value,
+      };
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || '生成失败，请稍后重试。');
+
+        result.hidden = false;
+        if (data.kind === 'safe') {
+          result.classList.add('safe');
+          heading.textContent = '标题已生成';
+          resultTitle.textContent = data.title;
+          titleToCopy = data.title;
+          copyButton.hidden = false;
+        } else {
+          result.classList.add('review');
+          heading.textContent = '需要人工复核';
+          draftLabel.hidden = false;
+          resultTitle.textContent = data.draft;
+          verdictLabel.hidden = false;
+          verdict.hidden = false;
+          verdict.textContent = data.verdict;
+        }
+        status.textContent = '';
+      } catch (error) {
+        result.hidden = false;
+        result.classList.add('error');
+        heading.textContent = '暂时无法生成';
+        resultTitle.textContent = error.message || '生成失败，请稍后重试。';
+        status.textContent = '';
+      } finally {
+        button.disabled = false;
+        button.textContent = '生成标题';
+      }
+    });
+
+    copyButton.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(titleToCopy);
+        copyButton.textContent = '已复制';
+        setTimeout(() => { copyButton.textContent = '复制标题'; }, 1600);
+      } catch {
+        const temporaryInput = document.createElement('textarea');
+        temporaryInput.value = titleToCopy;
+        temporaryInput.style.position = 'fixed';
+        temporaryInput.style.opacity = '0';
+        document.body.appendChild(temporaryInput);
+        temporaryInput.select();
+        document.execCommand('copy');
+        temporaryInput.remove();
+        copyButton.textContent = '已复制';
+        setTimeout(() => { copyButton.textContent = '复制标题'; }, 1600);
+      }
+    });
+  </script>
+</body>
+</html>
